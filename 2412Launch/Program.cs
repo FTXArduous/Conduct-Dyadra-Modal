@@ -30,20 +30,17 @@ internal static class Program
                     WorkingDirectory = Path.GetDirectoryName(exePath) ?? AppContext.BaseDirectory
                 };
                 Process.Start(psi);
-                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup-diagnostic.txt"),
-                    $"LauncherStartedExe={exePath} time={DateTime.UtcNow:o}{Environment.NewLine}");
+                LogDiagnostic($"LauncherStartedExe={exePath} time={DateTime.UtcNow:o}");
             }
             else
             {
-                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup-diagnostic.txt"),
-                    $"LauncherExeMissing={exePath} time={DateTime.UtcNow:o}{Environment.NewLine}");
+                LogDiagnostic($"LauncherExeMissing={exePath} time={DateTime.UtcNow:o}");
                 notify ??= $"Game executable not found. Expected one of the bundled engine builds under {Path.Combine(AppContext.BaseDirectory, "NativeSamples", "D3D12_8x8_engine", "build", "Release")}";
             }
         }
         catch (Exception ex)
         {
-            File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup-diagnostic.txt"),
-                $"LauncherStartExeError={ex.Message} time={DateTime.UtcNow:o}{Environment.NewLine}");
+            LogDiagnostic($"LauncherStartExeError={ex.Message} time={DateTime.UtcNow:o}");
             notify ??= "Failed to start game: " + ex.Message;
         }
 
@@ -53,13 +50,11 @@ internal static class Program
             {
                 var ps = new ProcessStartInfo(menuUrl) { UseShellExecute = true };
                 Process.Start(ps);
-                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup-diagnostic.txt"),
-                    $"LauncherOpenedMenu={menuUrl} time={DateTime.UtcNow:o}{Environment.NewLine}");
+                LogDiagnostic($"LauncherOpenedMenu={menuUrl} time={DateTime.UtcNow:o}");
             }
             catch (Exception ex)
             {
-                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "startup-diagnostic.txt"),
-                    $"LauncherOpenMenuError={ex.Message} time={DateTime.UtcNow:o}{Environment.NewLine}");
+                LogDiagnostic($"LauncherOpenMenuError={ex.Message} time={DateTime.UtcNow:o}");
                 notify ??= "Failed to open menu: " + ex.Message;
             }
         }
@@ -116,10 +111,10 @@ internal static class Program
         var baseDir = AppContext.BaseDirectory;
         var candidates = new[]
         {
-            Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Release", "D3D12_8x8_engine.exe"),
             Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Release", "D3D12_8x8_launcher.exe"),
+            Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Release", "D3D12_8x8_engine.exe"),
+            Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Debug", "D3D12_8x8_launcher.exe"),
             Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Debug", "D3D12_8x8_engine.exe"),
-            Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Debug", "D3D12_8x8_launcher.exe")
         };
 
         foreach (var candidate in candidates)
@@ -155,14 +150,14 @@ internal static class Program
         ExtractResource("Payload.D3D12_8x8_engine.exe", engineExePath);
         ExtractResource("Payload.D3D12_8x8_launcher.exe", launcherExePath);
 
-        if (File.Exists(engineExePath))
-        {
-            return engineExePath;
-        }
-
         if (File.Exists(launcherExePath))
         {
             return launcherExePath;
+        }
+
+        if (File.Exists(engineExePath))
+        {
+            return engineExePath;
         }
 
         return null;
@@ -193,5 +188,19 @@ internal static class Program
         }
 
         File.Move(tempPath, outputPath);
+    }
+
+    private static void LogDiagnostic(string message)
+    {
+        try
+        {
+            File.AppendAllText(
+                Path.Combine(AppContext.BaseDirectory, "startup-diagnostic.txt"),
+                message + Environment.NewLine);
+        }
+        catch
+        {
+            // Avoid diagnostic write failures breaking startup.
+        }
     }
 }
