@@ -22,5 +22,6 @@ This repository includes the published Windows executable as a Git LFS asset.
 
 - The executable is stored with Git LFS because it is too large for normal GitHub blobs.
 - If you want the exact file path inside the repo, it is `artifacts/publish/win-x64-updated/Conduct Dyadra Modal.exe`.
+- The main exe now auto-detects the bundled native engine under `NativeSamples/D3D12_8x8_engine/build/Release`, so you do not need to set `PORTAL_EXE_PATH` for a standard install.
 - If you download the repo as a ZIP from GitHub, make sure the large file is present after extraction. If it is missing, use `git clone` plus `git lfs pull` instead.
 - The included build is the Windows x64 published EXE.
