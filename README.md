@@ -2,6 +2,25 @@
 
 This repository includes the published Windows executable as a Git LFS asset.
 
+## Quick Start (Custom Folder)
+
+If you want to install/update in a specific folder, use one of these options.
+
+### Option A: Helper script (recommended)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Tools\clone_and_pull_lfs.ps1 -InstallPath "D:\Games\Conduct-Dyadra-Modal"
+```
+
+### Option B: Manual commands
+
+```powershell
+git lfs install
+git clone https://github.com/FTXArduous/Conduct-Dyadra-Modal.git "D:\Games\Conduct-Dyadra-Modal"
+cd "D:\Games\Conduct-Dyadra-Modal"
+git lfs pull
+```
+
 ## Install the full EXE on Windows
 
 1. Install Git for Windows.
