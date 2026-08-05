@@ -15,6 +15,16 @@ This repository includes the published Windows executable as a Git LFS asset.
    git lfs pull
    ```
 
+### Install to a custom location from PowerShell
+
+Use the helper script if you want to clone or update in any folder:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Tools\clone_and_pull_lfs.ps1 -InstallPath "D:\Games\Conduct-Dyadra-Modal"
+```
+
+You can run the same command again later to update that folder (it will run `git pull` and `git lfs pull`).
+
 4. For an existing local clone, update both git commits and LFS files:
 
    ```powershell
