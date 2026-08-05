@@ -52,8 +52,19 @@ You can run the same command again later to update that folder (it will run `git
    git lfs pull
    ```
 
-5. After the update, open the executable at `artifacts/publish/win-x64-updated/Conduct Dyadra Modal.exe`.
+5. After the update, open the executable at `artifacts/publish/win-x64-nativebot-final59/Conduct Dyadra Modal.exe`.
 6. Double-click the file in File Explorer to launch it.
+
+## Portable single EXE (copy anywhere)
+
+Use this build for a copy-anywhere launch:
+
+`artifacts/publish/win-x64-nativebot-final59/Conduct Dyadra Modal.exe`
+
+Behavior:
+- No side-by-side engine folder is required next to the EXE.
+- On first launch, the app extracts embedded engine binaries to `%LOCALAPPDATA%\\ConductDyadraModal\\runtime\\final59` and runs from there.
+- You can move the EXE to any folder and launch it directly.
 
 ## Build a full installer EXE (Inno Setup)
 
@@ -76,7 +87,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\build_engine_installer.ps1
 ## Notes
 
 - The executable is stored with Git LFS because it is too large for normal GitHub blobs.
-- If you want the exact file path inside the repo, it is `artifacts/publish/win-x64-updated/Conduct Dyadra Modal.exe`.
+- If you want the exact file path inside the repo, it is `artifacts/publish/win-x64-nativebot-final59/Conduct Dyadra Modal.exe`.
 - The main exe now auto-detects the bundled native engine under `NativeSamples/D3D12_8x8_engine/build/Release`, so you do not need to set `PORTAL_EXE_PATH` for a standard install.
 - If you already cloned earlier, always run `git pull origin main` before `git lfs pull`.
 - If you download the repo as a ZIP from GitHub, make sure the large file is present after extraction. If it is missing, use `git clone` plus `git lfs pull` instead.

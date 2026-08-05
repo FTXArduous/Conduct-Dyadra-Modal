@@ -1,5 +1,5 @@
 param(
-    [string]$PublishDir = ".\\artifacts\\publish\\win-x64-updated",
+    [string]$PublishDir = ".\\artifacts\\publish\\win-x64-nativebot-final59",
     [string]$EngineBuildDir = ".\\NativeSamples\\D3D12_8x8_engine\\build\\Release",
     [string]$InstallerScript = ".\\installer\\ConductDyadraModalEngine.iss",
     [string]$OutputDir = ".\\artifacts\\installer-output",

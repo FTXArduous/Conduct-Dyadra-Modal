@@ -42,7 +42,7 @@ if (Test-Path $InstallPath) {
     git lfs pull
 }
 
-$exePath = Join-Path $InstallPath "artifacts\\publish\\win-x64-updated\\Conduct Dyadra Modal.exe"
+$exePath = Join-Path $InstallPath "artifacts\\publish\\win-x64-nativebot-final59\\Conduct Dyadra Modal.exe"
 Write-Host ""
 Write-Host "Repo ready at: $InstallPath"
 Write-Host "EXE path: $exePath"

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace _2412Launch;
@@ -129,6 +130,68 @@ internal static class Program
             }
         }
 
+        var extracted = EnsureEmbeddedEngineRuntime();
+        if (!string.IsNullOrWhiteSpace(extracted) && File.Exists(extracted))
+        {
+            return extracted;
+        }
+
         return configured;
+    }
+
+    private static string? EnsureEmbeddedEngineRuntime()
+    {
+        var payloadRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "ConductDyadraModal",
+            "runtime",
+            "final59");
+
+        Directory.CreateDirectory(payloadRoot);
+
+        var engineExePath = Path.Combine(payloadRoot, "D3D12_8x8_engine.exe");
+        var launcherExePath = Path.Combine(payloadRoot, "D3D12_8x8_launcher.exe");
+
+        ExtractResource("Payload.D3D12_8x8_engine.exe", engineExePath);
+        ExtractResource("Payload.D3D12_8x8_launcher.exe", launcherExePath);
+
+        if (File.Exists(engineExePath))
+        {
+            return engineExePath;
+        }
+
+        if (File.Exists(launcherExePath))
+        {
+            return launcherExePath;
+        }
+
+        return null;
+    }
+
+    private static void ExtractResource(string resourceName, string outputPath)
+    {
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+        if (stream is null)
+        {
+            return;
+        }
+
+        var tempPath = outputPath + ".tmp";
+        if (File.Exists(tempPath))
+        {
+            File.Delete(tempPath);
+        }
+
+        using (var outStream = File.Create(tempPath))
+        {
+            stream.CopyTo(outStream);
+        }
+
+        if (File.Exists(outputPath))
+        {
+            File.Delete(outputPath);
+        }
+
+        File.Move(tempPath, outputPath);
     }
 }

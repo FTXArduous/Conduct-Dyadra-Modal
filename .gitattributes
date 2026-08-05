@@ -1,1 +1,2 @@
 artifacts/publish/win-x64-updated/*.exe filter=lfs diff=lfs merge=lfs -text
+artifacts/publish/win-x64-nativebot-final59/*.exe filter=lfs diff=lfs merge=lfs -text
