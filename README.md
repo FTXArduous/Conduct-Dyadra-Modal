@@ -55,6 +55,24 @@ You can run the same command again later to update that folder (it will run `git
 5. After the update, open the executable at `artifacts/publish/win-x64-updated/Conduct Dyadra Modal.exe`.
 6. Double-click the file in File Explorer to launch it.
 
+## Build a full installer EXE (Inno Setup)
+
+This creates a single installer that includes:
+- `Conduct Dyadra Modal.exe`
+- native engine binaries (`D3D12_8x8_engine.exe`, `D3D12_8x8_launcher.exe`)
+- supporting publish files
+
+1. Install Inno Setup 6.
+2. From repo root, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Tools\build_engine_installer.ps1
+```
+
+3. The installer output will be in:
+
+`artifacts/installer-output/ConductDyadraModal_EngineInstaller.exe`
+
 ## Notes
 
 - The executable is stored with Git LFS because it is too large for normal GitHub blobs.
