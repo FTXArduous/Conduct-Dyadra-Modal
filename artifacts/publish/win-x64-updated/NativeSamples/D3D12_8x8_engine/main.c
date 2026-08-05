@@ -1677,22 +1677,26 @@ static void open_settings_dialog()
 {
 	if (g_settingsDlg) return;
 	g_settingsDlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "STATIC", "Settings",
-		WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 360, 200,
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 420, 260,
 		g_hwnd, NULL, GetModuleHandle(NULL), NULL);
 	if (!g_settingsDlg) return;
+	CreateWindowA("STATIC", "Resolution", WS_CHILD | WS_VISIBLE,
+		10, 10, 200, 18, g_settingsDlg, NULL, GetModuleHandle(NULL), NULL);
 	HWND cmbRes = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST,
-		10, 10, 200, 200, g_settingsDlg, (HMENU)IDC_CMB_RES, GetModuleHandle(NULL), NULL);
+		10, 30, 260, 220, g_settingsDlg, (HMENU)IDC_CMB_RES, GetModuleHandle(NULL), NULL);
 	SendMessageA(cmbRes, CB_ADDSTRING, 0, (LPARAM)"1280x720");
 	SendMessageA(cmbRes, CB_ADDSTRING, 0, (LPARAM)"1920x1080");
 	SendMessageA(cmbRes, CB_SETCURSEL, (WPARAM)((g_appSettings.width==1920)?1:0), 0);
+	CreateWindowA("STATIC", "Refresh Rate", WS_CHILD | WS_VISIBLE,
+		10, 70, 200, 18, g_settingsDlg, NULL, GetModuleHandle(NULL), NULL);
 	HWND cmbHz = CreateWindowA("COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST,
-		10, 50, 200, 200, g_settingsDlg, (HMENU)IDC_CMB_HZ, GetModuleHandle(NULL), NULL);
+		10, 90, 260, 220, g_settingsDlg, (HMENU)IDC_CMB_HZ, GetModuleHandle(NULL), NULL);
 	for (int i=0;i<g_supportedHzCount;i++) { char b[16]; snprintf(b,sizeof(b),"%d Hz", g_supportedHz[i]); SendMessageA(cmbHz, CB_ADDSTRING, 0, (LPARAM)b); }
 	// pick closest index
 	int pick = 0; for (int i=0;i<g_supportedHzCount;i++) if (g_supportedHz[i]==g_appSettings.hz) { pick=i; break; }
 	SendMessageA(cmbHz, CB_SETCURSEL, (WPARAM)pick, 0);
 	CreateWindowA("BUTTON", "Apply", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		220, 120, 80, 28, g_settingsDlg, (HMENU)IDC_BTN_APPLY, GetModuleHandle(NULL), NULL);
+		300, 180, 90, 32, g_settingsDlg, (HMENU)IDC_BTN_APPLY, GetModuleHandle(NULL), NULL);
 }
 
 static void close_settings_dialog()
@@ -2263,8 +2267,9 @@ int main(void)
 					TextOutA(hdc, left, y, "Settings:", 9); y += 16;
 					char sbuf[64]; snprintf(sbuf, sizeof(sbuf), "Resolution: %dx%d", g_appSettings.width, g_appSettings.height);
 					TextOutA(hdc, left, y, sbuf, (int)strlen(sbuf)); y += 16;
-					char hbuf[64]; snprintf(hbuf, sizeof(hbuf), "Refresh target: %d Hz (use +/- to cycle, Enter to apply)", g_supportedHz[settingsHzIndex % g_supportedHzCount]);
+					char hbuf[96]; snprintf(hbuf, sizeof(hbuf), "Refresh target: %d Hz", g_supportedHz[settingsHzIndex % g_supportedHzCount]);
 					TextOutA(hdc, left, y, hbuf, (int)strlen(hbuf)); y += 16;
+					TextOutA(hdc, left, y, "Use +/- to cycle, Enter to apply", 31); y += 16;
 				} else if (mainPage == PAGE_OPERATIONS) {
 					TextOutA(hdc, left, y, "Operations (Local AI):", 22); y += 16;
 					char obuf[160]; snprintf(obuf, sizeof(obuf), "Rifle: %s/%s  AI: %s  Map: %s", rifleFamilies[selRifleFamily], rifleVariants[selRifleFamily][selRifleVariant], aiDifficulties[selAIDiff], maps[selMap]);
