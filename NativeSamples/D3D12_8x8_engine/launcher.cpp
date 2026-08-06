@@ -64,29 +64,48 @@ static bool g_musicOpen = false;
 
 static std::vector<Bullet> g_bullets;
 
-static int g_resIndex = 3;
+static int g_resIndex = 8;
 static const ResolutionPreset g_presets[] = {
-	{ 1920, 1080, "1920x1080 (16:9)" },
-	{ 2560, 1440, "2560x1440 (16:9)" },
-	{ 3440, 1440, "3440x1440 (21:9)" },
-	{ 3840, 2160, "3840x2160 (4K)" },
-	{ 5120, 1440, "5120x1440 (32:9)" },
-	{ 5720, 1080, "5720x1080 (ultrawide)" },
-	{ 5760, 1080, "5760x1080 (triple 1080p)" },
-	{ 7680, 2160, "7680x2160 (dual 4K width)" },
+	{ 1280, 720,   "1280x720 (16:9)" },
+	{ 1366, 768,   "1366x768 (16:9)" },
+	{ 1600, 900,   "1600x900 (16:9)" },
+	{ 1920, 1080,  "1920x1080 (16:9)" },
+	{ 1920, 1200,  "1920x1200 (16:10)" },
+	{ 2048, 1152,  "2048x1152 (16:9)" },
+	{ 2560, 1080,  "2560x1080 (21:9)" },
+	{ 2560, 1440,  "2560x1440 (16:9)" },
+	{ 2560, 1600,  "2560x1600 (16:10)" },
+	{ 3440, 1440,  "3440x1440 (21:9)" },
+	{ 3840, 1600,  "3840x1600 (24:10)" },
+	{ 3840, 2160,  "3840x2160 (4K 16:9)" },
+	{ 5120, 1440,  "5120x1440 (32:9)" },
+	{ 5120, 2160,  "5120x2160 (21:9 5K2K)" },
+	{ 5720, 1080,  "5720x1080 (super ultrawide)" },
+	{ 5720, 1440,  "5720x1440 (super ultrawide)" },
+	{ 5720, 2160,  "5720x2160 (super ultrawide)" },
+	{ 5760, 1080,  "5760x1080 (triple 1080p)" },
+	{ 5760, 1200,  "5760x1200 (triple 1200p)" },
+	{ 7680, 1440,  "7680x1440 (dual QHD width)" },
+	{ 7680, 2160,  "7680x2160 (dual 4K width)" },
 	{ 11520, 2160, "11520x2160 (triple 4K)" }
 };
 static const int g_presetCount = (int)(sizeof(g_presets) / sizeof(g_presets[0]));
 
-static int g_renderResIndex = 3;
+static int g_renderResIndex = 7;
 static const RenderResolutionPreset g_renderPresets[] = {
-	{ 640, 240, true,  "480i (interlaced)" },
-	{ 640, 480, false, "480p" },
-	{ 960, 540, false, "540p" },
+	{ 640, 240,  true,  "480i (interlaced)" },
+	{ 640, 360,  false, "360p" },
+	{ 854, 480,  false, "480p (16:9)" },
+	{ 960, 540,  false, "540p" },
+	{ 1024, 576, false, "576p" },
+	{ 1152, 648, false, "648p" },
 	{ 1280, 720, false, "720p" },
+	{ 1366, 768, false, "768p" },
 	{ 1600, 900, false, "900p" },
 	{ 1920, 1080, false, "1080p" },
-	{ 2560, 1440, false, "1440p" }
+	{ 2048, 1152, false, "1152p" },
+	{ 2560, 1440, false, "1440p" },
+	{ 2880, 1620, false, "1620p" }
 };
 static const int g_renderPresetCount = (int)(sizeof(g_renderPresets) / sizeof(g_renderPresets[0]));
 
@@ -375,70 +394,88 @@ static void paint_settings(HDC hdc)
 	SetBkMode(hdc, TRANSPARENT);
 	draw_text_line(hdc, p.left + 20, p.top + 16, "Main.ESC Settings", RGB(255, 255, 255));
 
-	const int lineH = 28;
+	const int textLeft = p.left + 20;
+	const int textRight = p.right - 34;
 	const int top = p.top + 56;
-	const int viewH = (p.bottom - p.top) - 90;
-	const int itemCount = 15;
-	const int contentH = itemCount * lineH;
+	const int viewH = (p.bottom - p.top) - 88;
+
+	char line1[256];
+	char line2[256];
+	char line3[256];
+	char line4[256];
+	char line5[256];
+	char line6[256];
+	char line7[256];
+	char line8[256];
+
+	snprintf(line1, sizeof(line1), "HUD Text: %s (H toggle)", g_showHudText ? "ON" : "OFF");
+	snprintf(line2, sizeof(line2), "Mouse Sensitivity: %.3f  (J/K)", g_mouseSensitivity);
+	snprintf(line3, sizeof(line3), "Gravity: %.2f ft/s^2  (N/M)", g_gravityFps2);
+	snprintf(line4, sizeof(line4), "Move Speed: %.1f ft/s  (U/I)", g_moveSpeedFps);
+	snprintf(line5, sizeof(line5), "Display Resolution: %s  ([ / ])", g_presets[g_resIndex].label);
+	snprintf(line6, sizeof(line6), "Render Resolution: %s  (, / .)", g_renderPresets[g_renderResIndex].label);
+	snprintf(line7, sizeof(line7), "Music: %s  (O toggle)", g_musicEnabled ? "ON" : "OFF");
+	snprintf(line8, sizeof(line8), "Song Selection: %s  (Left/Right)", g_songLabels[g_songIndex]);
+
+	const char* lines[] = {
+		line1,
+		line2,
+		line3,
+		line4,
+		line5,
+		line6,
+		line7,
+		line8,
+		"Render output uses a weaker upscaler/interpolation to match display resolution for performance stability.",
+		"FreeSync/G-Sync: Auto-enabled when the display + driver chain supports VRR.",
+		"Expanded display list includes standard + odd ratios: 16:9, 16:10, 3:2, 5:4, 21:9, 24:10, 32:9, 48:9.",
+		"Examples now covered: 5720x1080, 7680x1440, 11520x2160, and mainstream 1440p/4K modes.",
+		"Apply Display Resolution: Enter",
+		"Scroll Settings: Mouse Wheel or Up/Down",
+		"Close Settings: ESC",
+		"Mouse remains dominant during gameplay; movement keys do not override aim mode.",
+		"Ballistics model remains active: 2000 fps muzzle, sticky first half-mile, 1000 fps by 5 miles."
+	};
+	const COLORREF lineColors[] = {
+		RGB(220, 220, 220), RGB(220, 220, 220), RGB(220, 220, 220), RGB(220, 220, 220),
+		RGB(220, 220, 220), RGB(220, 220, 220), RGB(220, 220, 220), RGB(220, 220, 220),
+		RGB(190, 210, 240), RGB(190, 210, 240), RGB(190, 210, 240), RGB(190, 210, 240),
+		RGB(220, 220, 220), RGB(220, 220, 220), RGB(220, 220, 220), RGB(255, 230, 160),
+		RGB(255, 230, 160)
+	};
+
+	const int lineCount = (int)(sizeof(lines) / sizeof(lines[0]));
+	std::vector<int> lineHeights(lineCount);
+	int contentH = 0;
+	for (int i = 0; i < lineCount; ++i) {
+		RECT calc = { textLeft, 0, textRight, 0 };
+		DrawTextA(hdc, lines[i], -1, &calc, DT_LEFT | DT_WORDBREAK | DT_CALCRECT | DT_NOPREFIX);
+		int h = calc.bottom - calc.top;
+		if (h < 20) h = 20;
+		lineHeights[i] = h + 6;
+		contentH += lineHeights[i];
+	}
+
 	float maxScroll = (float)(contentH - viewH);
 	if (maxScroll < 0.0f) maxScroll = 0.0f;
 	g_settingsScroll = clampf(g_settingsScroll, 0.0f, maxScroll);
 
+	int saved = SaveDC(hdc);
+	IntersectClipRect(hdc, textLeft, top, textRight, top + viewH);
 	int y = top - (int)g_settingsScroll;
-	char buf[256];
-
-	snprintf(buf, sizeof(buf), "HUD Text: %s (H toggle)", g_showHudText ? "ON" : "OFF");
-	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
-	y += lineH;
-
-	snprintf(buf, sizeof(buf), "Mouse Sensitivity: %.3f  (J/K)", g_mouseSensitivity);
-	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
-	y += lineH;
-
-	snprintf(buf, sizeof(buf), "Gravity: %.2f ft/s^2  (N/M)", g_gravityFps2);
-	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
-	y += lineH;
-
-	snprintf(buf, sizeof(buf), "Move Speed: %.1f ft/s  (U/I)", g_moveSpeedFps);
-	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
-	y += lineH;
-
-	snprintf(buf, sizeof(buf), "Resolution: %s  ([ / ])", g_presets[g_resIndex].label);
-	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
-	y += lineH;
-
-	snprintf(buf, sizeof(buf), "Render Resolution: %s  (, / .)", g_renderPresets[g_renderResIndex].label);
-	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
-	y += lineH;
-
-	snprintf(buf, sizeof(buf), "Music: %s  (O toggle)", g_musicEnabled ? "ON" : "OFF");
-	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
-	y += lineH;
-
-	snprintf(buf, sizeof(buf), "Song Selection: %s  (Left/Right)", g_songLabels[g_songIndex]);
-	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
-	y += lineH;
-
-	draw_text_line(hdc, p.left + 20, y, "Render output is upscaled/interpolated to display resolution for performance.", RGB(190, 210, 240));
-	y += lineH;
-
-	draw_text_line(hdc, p.left + 20, y, "FreeSync/G-Sync: Auto-enabled when driver/display supports VRR.", RGB(190, 210, 240));
-	y += lineH;
-
-	draw_text_line(hdc, p.left + 20, y, "Includes 1440p, 4K, 21:9, 5720x1080, and up to triple-4K ratio.", RGB(190, 210, 240));
-	y += lineH;
-	draw_text_line(hdc, p.left + 20, y, "Apply Resolution: Enter", RGB(220, 220, 220));
-	y += lineH;
-	draw_text_line(hdc, p.left + 20, y, "Scroll: Mouse Wheel or Up/Down", RGB(220, 220, 220));
-	y += lineH;
-	draw_text_line(hdc, p.left + 20, y, "Close Settings: ESC", RGB(220, 220, 220));
-	y += lineH;
-	draw_text_line(hdc, p.left + 20, y, "Mouse is dominant in gameplay mode and unaffected by movement keys.", RGB(255, 230, 160));
-	y += lineH;
-	draw_text_line(hdc, p.left + 20, y, "Ballistics: 2000 fps muzzle, sticky first half-mile, 1000 fps at 5 miles, gravity drop enabled.", RGB(255, 230, 160));
+	for (int i = 0; i < lineCount; ++i) {
+		int h = lineHeights[i];
+		if (y + h >= top && y <= top + viewH) {
+			RECT tr = { textLeft, y, textRight, y + h };
+			SetTextColor(hdc, lineColors[i]);
+			DrawTextA(hdc, lines[i], -1, &tr, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX);
+		}
+		y += h;
+	}
+	RestoreDC(hdc, saved);
 
 	if (contentH > viewH) {
-		RECT track = { p.right - 22, top, p.right - 12, top + viewH };
+		RECT track = { p.right - 20, top, p.right - 8, top + viewH };
 		HBRUSH tr = CreateSolidBrush(RGB(50, 56, 70));
 		FillRect(hdc, &track, tr);
 		DeleteObject(tr);

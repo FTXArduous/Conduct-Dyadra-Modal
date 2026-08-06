@@ -47,6 +47,23 @@ static inline float3 reflectf3(float3 v, float3 n) { float d = dotf3(v, n); retu
 
 enum PageId { PAGE_HOME = 1, PAGE_PLAY, PAGE_MATCHMAKING, PAGE_SETTINGS, PAGE_ABOUT, PAGE_EXTRAS, PAGE_DIAGNOSTICS };
 static int g_page = PAGE_HOME;
+static int g_settingsScrollPx = 0;
+
+static const char *g_displayResOptions[] = {
+	"1280x720 (16:9)", "1366x768 (16:9)", "1600x900 (16:9)", "1920x1080 (16:9)",
+	"2560x1440 (16:9)", "3840x2160 (16:9 4K)", "1920x1200 (16:10)", "2560x1600 (16:10)",
+	"3440x1440 (21:9)", "3840x1600 (24:10)", "5120x2160 (21:9 5K2K)", "5120x1440 (32:9)",
+	"5720x1080 (super ultrawide)", "5720x1440 (super ultrawide)", "5720x2160 (super ultrawide)",
+	"5760x1080 (triple 1080p)", "5760x1200 (triple 1200p)", "7680x1440 (dual QHD width)",
+	"7680x2160 (dual 4K width)", "11520x2160 (triple 4K)"
+};
+static const int g_displayResOptionCount = (int)(sizeof(g_displayResOptions) / sizeof(g_displayResOptions[0]));
+
+static const char *g_renderResOptions[] = {
+	"480i (interlaced)", "360p", "480p", "540p", "576p", "648p", "720p", "768p",
+	"900p", "1080p", "1152p", "1440p", "1620p"
+};
+static const int g_renderResOptionCount = (int)(sizeof(g_renderResOptions) / sizeof(g_renderResOptions[0]));
 
 // UI objects
 static HFONT g_fontAndroidLarge = NULL;
@@ -704,6 +721,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		InvalidateRect(hwnd, NULL, TRUE);
 		return 0; }
 
+	case WM_MOUSEWHEEL: {
+		if (g_page == PAGE_SETTINGS) {
+			short z = GET_WHEEL_DELTA_WPARAM(wParam);
+			g_settingsScrollPx -= ((int)z / WHEEL_DELTA) * 28;
+			if (g_settingsScrollPx < 0) g_settingsScrollPx = 0;
+			InvalidateRect(hwnd, NULL, FALSE);
+			return 0;
+		}
+		break;
+	}
+
 	case WM_PAINT: {
 		PAINTSTRUCT ps; HDC hdc = BeginPaint(hwnd, &ps);
 		// blit preview buffer into left preview area
@@ -758,6 +786,70 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			char mp[64]; if (g_matchmakingActive) snprintf(mp, sizeof(mp), "Finding match... %.0f%%", g_matchmakingProgress*100.0); else snprintf(mp, sizeof(mp), "Find Match");
 			SetTextColor(hdc, RGB(200,200,255));
 			TextOutA(hdc, 380, 270, mp, (int)strlen(mp));
+		}
+
+		if (g_page == PAGE_SETTINGS) {
+			RECT panel = { 250, 300, rc.right - 24, rc.bottom - 24 };
+			HBRUSH panelBrush = CreateSolidBrush(RGB(26, 30, 42));
+			FillRect(hdc, &panel, panelBrush);
+			DeleteObject(panelBrush);
+
+			SetTextColor(hdc, RGB(235, 235, 245));
+			SetBkMode(hdc, TRANSPARENT);
+			TextOutA(hdc, panel.left + 14, panel.top + 10, "Settings Resolution Lists", 25);
+
+			const int contentLeft = panel.left + 14;
+			const int contentTop = panel.top + 40;
+			const int contentRight = panel.right - 22;
+			const int viewH = panel.bottom - contentTop - 10;
+			const int lineH = 22;
+			const int contentLines = 3 + g_displayResOptionCount + 2 + g_renderResOptionCount + 3;
+			int contentH = contentLines * lineH;
+			int maxScroll = contentH - viewH;
+			if (maxScroll < 0) maxScroll = 0;
+			if (g_settingsScrollPx > maxScroll) g_settingsScrollPx = maxScroll;
+
+			int y = contentTop - g_settingsScrollPx;
+			int saved = SaveDC(hdc);
+			IntersectClipRect(hdc, contentLeft, contentTop, contentRight, contentTop + viewH);
+
+			TextOutA(hdc, contentLeft, y, "Display Resolutions (includes standard + unusual ratios):", 55); y += lineH;
+			for (int i = 0; i < g_displayResOptionCount; ++i) {
+				char line[256];
+				snprintf(line, sizeof(line), "  - %s", g_displayResOptions[i]);
+				TextOutA(hdc, contentLeft, y, line, (int)strlen(line));
+				y += lineH;
+			}
+
+			TextOutA(hdc, contentLeft, y, "", 0); y += lineH / 2;
+			TextOutA(hdc, contentLeft, y, "Render Resolutions (weaker upscaler used to match display target):", 63); y += lineH;
+			for (int i = 0; i < g_renderResOptionCount; ++i) {
+				char line[256];
+				snprintf(line, sizeof(line), "  - %s", g_renderResOptions[i]);
+				TextOutA(hdc, contentLeft, y, line, (int)strlen(line));
+				y += lineH;
+			}
+
+			TextOutA(hdc, contentLeft, y, "", 0); y += lineH / 2;
+			TextOutA(hdc, contentLeft, y, "Mouse Wheel scrolls this settings list.", 38); y += lineH;
+			TextOutA(hdc, contentLeft, y, "This preserves current gameplay behavior while preventing overlap.", 58); y += lineH;
+
+			RestoreDC(hdc, saved);
+
+			if (maxScroll > 0) {
+				RECT track = { panel.right - 14, contentTop, panel.right - 6, contentTop + viewH };
+				HBRUSH trackBrush = CreateSolidBrush(RGB(58, 66, 90));
+				FillRect(hdc, &track, trackBrush);
+				DeleteObject(trackBrush);
+
+				int thumbH = (viewH * viewH) / contentH;
+				if (thumbH < 20) thumbH = 20;
+				int thumbY = contentTop + (maxScroll > 0 ? (g_settingsScrollPx * (viewH - thumbH)) / maxScroll : 0);
+				RECT thumb = { track.left, thumbY, track.right, thumbY + thumbH };
+				HBRUSH thumbBrush = CreateSolidBrush(RGB(190, 205, 235));
+				FillRect(hdc, &thumb, thumbBrush);
+				DeleteObject(thumbBrush);
+			}
 		}
 
 		EndPaint(hwnd, &ps);
