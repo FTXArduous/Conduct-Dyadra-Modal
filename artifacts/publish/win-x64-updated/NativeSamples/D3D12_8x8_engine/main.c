@@ -47,50 +47,6 @@ static inline float3 reflectf3(float3 v, float3 n) { float d = dotf3(v, n); retu
 
 enum PageId { PAGE_HOME = 1, PAGE_PLAY, PAGE_MATCHMAKING, PAGE_SETTINGS, PAGE_ABOUT, PAGE_EXTRAS, PAGE_DIAGNOSTICS };
 static int g_page = PAGE_HOME;
-static int g_settingsScrollY = 0;
-static int g_settingsContentHeight = 0;
-
-static const char* g_displayResLabels[] = {
-	"1280x720 (HD, 16:9)",
-	"1366x768 (WXGA, 16:9)",
-	"1600x900 (HD+, 16:9)",
-	"1920x1080 (FHD, 16:9)",
-	"2560x1440 (QHD, 16:9)",
-	"3840x2160 (4K UHD, 16:9)",
-	"2560x1080 (UltraWide, 21:9)",
-	"3440x1440 (UltraWide QHD, 21:9)",
-	"5120x2160 (5K2K, 21:9)",
-	"5120x1440 (Dual QHD, 32:9)",
-	"3840x1080 (Dual FHD, 32:9)",
-	"5720x1080 (Triple 16:9, Surround)",
-	"5760x1080 (Triple 16:9, common)",
-	"1728x1080 (stretched 16:9 on 16:10)",
-	"1440x1080 (4:3 stretched option)",
-	"1080x1080 (1:1 square test mode)",
-	"1280x1024 (5:4 legacy)",
-	"1024x768 (4:3 legacy)"
-};
-static const int g_displayResCount = (int)(sizeof(g_displayResLabels) / sizeof(g_displayResLabels[0]));
-
-static const char* g_renderResLabels[] = {
-	"Render 1280x720 (720p)",
-	"Render 1600x900 (900p)",
-	"Render 1920x1080 (1080p)",
-	"Render 2560x1440 (1440p)",
-	"Render 3200x1800 (1800p)",
-	"Render 3840x2160 (2160p)",
-	"Render 4096x2160 (DCI 4K)",
-	"Render 5120x2880 (5K)",
-	"Render 7680x4320 (8K)",
-	"Render 2560x1080 (21:9)",
-	"Render 3440x1440 (21:9)",
-	"Render 3840x1600 (21:9)",
-	"Render 5120x1440 (32:9)",
-	"21:9 render in 16:9 window (letterbox)",
-	"16:9 render in 21:9 window (pillarbox)",
-	"4:3 competitive crop in 16:9"
-};
-static const int g_renderResCount = (int)(sizeof(g_renderResLabels) / sizeof(g_renderResLabels[0]));
 
 // UI objects
 static HFONT g_fontAndroidLarge = NULL;
@@ -709,7 +665,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_COMMAND: {
 		int id = LOWORD(wParam);
-		int prevPage = g_page;
 		if (id == IDC_LINK1) { g_page = PAGE_PLAY; }
 		else if (id == IDC_LINK2) { g_page = PAGE_SETTINGS; }
 		else if (id == IDC_LINK3) { g_page = PAGE_EXTRAS; }
@@ -746,35 +701,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		ShowWindow(GetDlgItem(hwnd, IDC_WEAP1), (g_page==PAGE_PLAY)?SW_SHOW:SW_HIDE);
 		ShowWindow(GetDlgItem(hwnd, IDC_WEAP2), (g_page==PAGE_PLAY)?SW_SHOW:SW_HIDE);
 		ShowWindow(GetDlgItem(hwnd, IDC_WEAP3), (g_page==PAGE_PLAY)?SW_SHOW:SW_HIDE);
-		if (g_page == PAGE_SETTINGS && prevPage != PAGE_SETTINGS) {
-			g_settingsScrollY = 0;
-		}
 		InvalidateRect(hwnd, NULL, TRUE);
 		return 0; }
-
-	case WM_MOUSEWHEEL: {
-		if (g_page == PAGE_SETTINGS) {
-			RECT client;
-			GetClientRect(hwnd, &client);
-			int panelTop = 320;
-			int panelBottom = client.bottom - 32;
-			int viewport = panelBottom - panelTop - 24;
-			if (viewport < 1) viewport = 1;
-			int maxScroll = g_settingsContentHeight - viewport;
-			if (maxScroll < 0) maxScroll = 0;
-
-			int wheel = GET_WHEEL_DELTA_WPARAM(wParam);
-			int next = g_settingsScrollY - ((wheel / WHEEL_DELTA) * 36);
-			if (next < 0) next = 0;
-			if (next > maxScroll) next = maxScroll;
-			if (next != g_settingsScrollY) {
-				g_settingsScrollY = next;
-				InvalidateRect(hwnd, NULL, TRUE);
-			}
-			return 0;
-		}
-		break;
-	}
 
 	case WM_PAINT: {
 		PAINTSTRUCT ps; HDC hdc = BeginPaint(hwnd, &ps);
@@ -830,85 +758,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			char mp[64]; if (g_matchmakingActive) snprintf(mp, sizeof(mp), "Finding match... %.0f%%", g_matchmakingProgress*100.0); else snprintf(mp, sizeof(mp), "Find Match");
 			SetTextColor(hdc, RGB(200,200,255));
 			TextOutA(hdc, 380, 270, mp, (int)strlen(mp));
-		}
-
-		if (g_page == PAGE_SETTINGS) {
-			RECT panel = { 250, 320, rc.right - 20, rc.bottom - 20 };
-			HBRUSH panelBrush = CreateSolidBrush(RGB(18, 24, 36));
-			FillRect(hdc, &panel, panelBrush);
-			DeleteObject(panelBrush);
-			FrameRect(hdc, &panel, (HBRUSH)GetStockObject(WHITE_BRUSH));
-
-			int scrollbarW = 14;
-			RECT content = { panel.left + 12, panel.top + 10, panel.right - scrollbarW - 10, panel.bottom - 10 };
-			int contentTop = content.top;
-			int y = contentTop + 4 - g_settingsScrollY;
-
-			int saved = SaveDC(hdc);
-			IntersectClipRect(hdc, content.left, content.top, content.right, content.bottom);
-
-			SetTextColor(hdc, RGB(220, 230, 255));
-			SetBkMode(hdc, TRANSPARENT);
-			{
-				const char *intro = "Settings Window: open this page from Main Menu > Settings, or while in session by exiting to menu and choosing Settings. This is the shared settings flow.";
-				RECT calc = { 0, 0, content.right - content.left, 0 };
-				DrawTextA(hdc, intro, -1, &calc, DT_WORDBREAK | DT_CALCRECT);
-				RECT draw = { content.left, y, content.right, y + (calc.bottom - calc.top) };
-				DrawTextA(hdc, intro, -1, &draw, DT_WORDBREAK);
-				y += (calc.bottom - calc.top) + 10;
-			}
-
-			SetTextColor(hdc, RGB(255, 215, 120));
-			TextOutA(hdc, content.left, y, "Display Resolution Presets", 26);
-			y += 24;
-			SetTextColor(hdc, RGB(220, 230, 255));
-			for (int i = 0; i < g_displayResCount; ++i) {
-				RECT calc = { 0, 0, content.right - content.left, 0 };
-				DrawTextA(hdc, g_displayResLabels[i], -1, &calc, DT_WORDBREAK | DT_CALCRECT);
-				RECT draw = { content.left, y, content.right, y + (calc.bottom - calc.top) };
-				DrawTextA(hdc, g_displayResLabels[i], -1, &draw, DT_WORDBREAK);
-				y += (calc.bottom - calc.top) + 6;
-			}
-
-			y += 6;
-			SetTextColor(hdc, RGB(255, 215, 120));
-			TextOutA(hdc, content.left, y, "Render Resolution Presets", 25);
-			y += 24;
-			SetTextColor(hdc, RGB(220, 230, 255));
-			for (int i = 0; i < g_renderResCount; ++i) {
-				RECT calc = { 0, 0, content.right - content.left, 0 };
-				DrawTextA(hdc, g_renderResLabels[i], -1, &calc, DT_WORDBREAK | DT_CALCRECT);
-				RECT draw = { content.left, y, content.right, y + (calc.bottom - calc.top) };
-				DrawTextA(hdc, g_renderResLabels[i], -1, &draw, DT_WORDBREAK);
-				y += (calc.bottom - calc.top) + 6;
-			}
-
-			g_settingsContentHeight = (y - (contentTop + 4 - g_settingsScrollY)) + 8;
-			RestoreDC(hdc, saved);
-
-			int viewport = content.bottom - content.top;
-			if (viewport < 1) viewport = 1;
-			int maxScroll = g_settingsContentHeight - viewport;
-			if (maxScroll < 0) maxScroll = 0;
-			if (g_settingsScrollY > maxScroll) g_settingsScrollY = maxScroll;
-
-			RECT sbTrack = { content.right + 4, content.top, content.right + 4 + scrollbarW, content.bottom };
-			HBRUSH track = CreateSolidBrush(RGB(40, 48, 64));
-			FillRect(hdc, &sbTrack, track);
-			DeleteObject(track);
-
-			if (maxScroll > 0) {
-				int trackH = sbTrack.bottom - sbTrack.top;
-				int thumbH = (viewport * trackH) / g_settingsContentHeight;
-				if (thumbH < 24) thumbH = 24;
-				if (thumbH > trackH) thumbH = trackH;
-				int travel = trackH - thumbH;
-				int thumbY = sbTrack.top + (travel * g_settingsScrollY) / maxScroll;
-				RECT thumb = { sbTrack.left + 2, thumbY, sbTrack.right - 2, thumbY + thumbH };
-				HBRUSH thumbBrush = CreateSolidBrush(RGB(140, 170, 220));
-				FillRect(hdc, &thumb, thumbBrush);
-				DeleteObject(thumbBrush);
-			}
 		}
 
 		EndPaint(hwnd, &ps);
