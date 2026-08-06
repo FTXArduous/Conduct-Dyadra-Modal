@@ -55,16 +55,16 @@ You can run the same command again later to update that folder (it will run `git
 5. After the update, open the executable at `artifacts/publish/win-x64-nativebot-final59/Conduct Dyadra Modal.exe`.
 6. Double-click the file in File Explorer to launch it.
 
-## Portable single EXE (copy anywhere)
+## final59 launch package (recommended)
 
-Use this build for a copy-anywhere launch:
+Use this folder build for best antivirus compatibility:
 
-`artifacts/publish/win-x64-nativebot-final59/Conduct Dyadra Modal.exe`
+`artifacts/publish/win-x64-nativebot-final59/`
 
 Behavior:
-- No side-by-side engine folder is required next to the EXE.
-- On first launch, the app extracts embedded engine binaries to `%LOCALAPPDATA%\\ConductDyadraModal\\runtime\\final59` and runs from there.
-- You can move the EXE to any folder and launch it directly.
+- Keep all files in this folder together (EXE, DLL, runtimeconfig, and `NativeSamples` payload files).
+- Launch `Conduct Dyadra Modal.exe` from inside that folder.
+- This packaging avoids the embedded single-file extraction pattern that can trigger ML antivirus detections.
 
 ## Build a full installer EXE (Inno Setup)
 
@@ -88,7 +88,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\build_engine_installer.ps1
 
 - The executable is stored with Git LFS because it is too large for normal GitHub blobs.
 - If you want the exact file path inside the repo, it is `artifacts/publish/win-x64-nativebot-final59/Conduct Dyadra Modal.exe`.
-- The main exe now auto-detects the bundled native engine under `NativeSamples/D3D12_8x8_engine/build/Release`, so you do not need to set `PORTAL_EXE_PATH` for a standard install.
+- The main exe auto-detects the bundled native engine under `NativeSamples/D3D12_8x8_engine/build/Release`, so you do not need to set `PORTAL_EXE_PATH` for a standard install.
 - If you already cloned earlier, always run `git pull origin main` before `git lfs pull`.
 - If you download the repo as a ZIP from GitHub, make sure the large file is present after extraction. If it is missing, use `git clone` plus `git lfs pull` instead.
 - The included build is the Windows x64 published EXE.

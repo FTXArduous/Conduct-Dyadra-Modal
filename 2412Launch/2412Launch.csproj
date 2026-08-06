@@ -7,18 +7,27 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Conduct Dyadra Modal</AssemblyName>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
+    <Version>59.0.3</Version>
+    <FileVersion>59.0.3.0</FileVersion>
+    <AssemblyVersion>59.0.3.0</AssemblyVersion>
+    <InformationalVersion>final59-redeploy-59.0.3</InformationalVersion>
+    <Company>Conduct Dyadra Modal</Company>
+    <Product>Conduct Dyadra Modal</Product>
+    <Description>Conduct Dyadra Modal launcher with embedded engine payload.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_engine.exe">
-      <LogicalName>Payload.D3D12_8x8_engine.exe</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe">
-      <LogicalName>Payload.D3D12_8x8_launcher.exe</LogicalName>
-    </EmbeddedResource>
+    <Content Include="..\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_engine.exe">
+      <Link>NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_engine.exe</Link>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content>
+    <Content Include="..\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe">
+      <Link>NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe</Link>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>
