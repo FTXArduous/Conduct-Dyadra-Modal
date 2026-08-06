@@ -146,9 +146,15 @@ internal static class Program
 
         var engineExePath = Path.Combine(payloadRoot, "D3D12_8x8_engine.exe");
         var launcherExePath = Path.Combine(payloadRoot, "D3D12_8x8_launcher.exe");
+        var song1Path = Path.Combine(payloadRoot, "Obsidian Bazaar Chillhop.mp3");
+        var song2Path = Path.Combine(payloadRoot, "Obsidian Bazaar Chillhop (1).mp3");
+        var song3Path = Path.Combine(payloadRoot, "Obsidian Bazaar Chillhop (2).mp3");
 
         ExtractResource("Payload.D3D12_8x8_engine.exe", engineExePath);
         ExtractResource("Payload.D3D12_8x8_launcher.exe", launcherExePath);
+        ExtractResource("Payload.Obsidian Bazaar Chillhop.mp3", song1Path);
+        ExtractResource("Payload.Obsidian Bazaar Chillhop (1).mp3", song2Path);
+        ExtractResource("Payload.Obsidian Bazaar Chillhop (2).mp3", song3Path);
 
         if (File.Exists(launcherExePath))
         {

@@ -1,8 +1,11 @@
 #include <windows.h>
+#include <mmsystem.h>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <vector>
+
+#pragma comment(lib, "winmm.lib")
 
 static const char* CLASS_NAME = "D3D12_8x8_Launcher_Class";
 
@@ -55,6 +58,9 @@ static float g_settingsScroll = 0.0f;
 static ULONGLONG g_lastTickMs = 0;
 static ULONGLONG g_lastFireMs = 0;
 static bool g_vrrAuto = true;
+static bool g_musicEnabled = true;
+static int g_songIndex = 0;
+static bool g_musicOpen = false;
 
 static std::vector<Bullet> g_bullets;
 
@@ -84,11 +90,102 @@ static const RenderResolutionPreset g_renderPresets[] = {
 };
 static const int g_renderPresetCount = (int)(sizeof(g_renderPresets) / sizeof(g_renderPresets[0]));
 
+static const char* g_songFiles[] = {
+	"Obsidian Bazaar Chillhop.mp3",
+	"Obsidian Bazaar Chillhop (1).mp3",
+	"Obsidian Bazaar Chillhop (2).mp3"
+};
+static const char* g_songLabels[] = {
+	"Obsidian Bazaar Chillhop",
+	"Obsidian Bazaar Chillhop (1)",
+	"Obsidian Bazaar Chillhop (2)"
+};
+static const int g_songCount = 3;
+
 static float clampf(float v, float lo, float hi)
 {
 	if (v < lo) return lo;
 	if (v > hi) return hi;
 	return v;
+}
+
+static bool file_exists(const char* path)
+{
+	DWORD attrs = GetFileAttributesA(path);
+	return attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0;
+}
+
+static bool resolve_song_path(int idx, char* outPath, size_t outSize)
+{
+	if (!outPath || outSize < MAX_PATH || idx < 0 || idx >= g_songCount) return false;
+
+	char cwd[MAX_PATH] = { 0 };
+	if (!GetCurrentDirectoryA((DWORD)sizeof(cwd), cwd)) return false;
+
+	snprintf(outPath, outSize, "%s\\%s", cwd, g_songFiles[idx]);
+	if (file_exists(outPath)) return true;
+
+	snprintf(outPath, outSize, "%s\\Game\\%s", cwd, g_songFiles[idx]);
+	if (file_exists(outPath)) return true;
+
+	snprintf(outPath, outSize, "%s\\NativeSamples\\D3D12_8x8_engine\\build\\Release\\%s", cwd, g_songFiles[idx]);
+	if (file_exists(outPath)) return true;
+
+	return false;
+}
+
+static void music_stop()
+{
+	mciSendStringA("stop bgm", NULL, 0, NULL);
+	mciSendStringA("close bgm", NULL, 0, NULL);
+	g_musicOpen = false;
+}
+
+static void music_play_selected(bool restart)
+{
+	if (!g_musicEnabled) {
+		music_stop();
+		return;
+	}
+
+	char songPath[MAX_PATH] = { 0 };
+	if (!resolve_song_path(g_songIndex, songPath, sizeof(songPath))) {
+		music_stop();
+		return;
+	}
+
+	if (g_musicOpen && !restart) return;
+
+	music_stop();
+	char cmd[1200] = { 0 };
+	snprintf(cmd, sizeof(cmd), "open \"%s\" type mpegvideo alias bgm", songPath);
+	if (mciSendStringA(cmd, NULL, 0, NULL) == 0) {
+		g_musicOpen = true;
+		mciSendStringA("play bgm", NULL, 0, NULL);
+	}
+}
+
+static void music_poll_and_advance()
+{
+	if (!g_musicEnabled || !g_musicOpen) return;
+	char mode[64] = { 0 };
+	if (mciSendStringA("status bgm mode", mode, (UINT)sizeof(mode), NULL) != 0) return;
+	if (_stricmp(mode, "stopped") == 0) {
+		g_songIndex = (g_songIndex + 1) % g_songCount;
+		music_play_selected(true);
+	}
+}
+
+static void music_select_next()
+{
+	g_songIndex = (g_songIndex + 1) % g_songCount;
+	music_play_selected(true);
+}
+
+static void music_select_prev()
+{
+	g_songIndex = (g_songIndex - 1 + g_songCount) % g_songCount;
+	music_play_selected(true);
 }
 
 static void update_capture()
@@ -249,7 +346,10 @@ static void paint_hud(HDC hdc, int renderW, int renderH)
 		char b4[256];
 		snprintf(b4, sizeof(b4), "Display: %s  Render: %s  VRR Auto: %s", g_presets[g_resIndex].label, g_renderPresets[g_renderResIndex].label, g_vrrAuto ? "ON" : "OFF");
 		draw_text_line(hdc, 16, 52, b4, RGB(230, 230, 230));
-		draw_text_line(hdc, 16, 72, "LMB fire | WASD move (left/right static to yaw) | ESC settings | H HUD text", RGB(190, 215, 255));
+		char b5[256];
+		snprintf(b5, sizeof(b5), "Music: %s  Song: %s", g_musicEnabled ? "ON" : "OFF", g_songLabels[g_songIndex]);
+		draw_text_line(hdc, 16, 72, b5, RGB(230, 230, 230));
+		draw_text_line(hdc, 16, 92, "LMB fire | WASD move (left/right static to yaw) | ESC settings | H HUD text", RGB(190, 215, 255));
 	}
 
 	if (!g_bullets.empty()) {
@@ -278,7 +378,7 @@ static void paint_settings(HDC hdc)
 	const int lineH = 28;
 	const int top = p.top + 56;
 	const int viewH = (p.bottom - p.top) - 90;
-	const int itemCount = 13;
+	const int itemCount = 15;
 	const int contentH = itemCount * lineH;
 	float maxScroll = (float)(contentH - viewH);
 	if (maxScroll < 0.0f) maxScroll = 0.0f;
@@ -308,6 +408,14 @@ static void paint_settings(HDC hdc)
 	y += lineH;
 
 	snprintf(buf, sizeof(buf), "Render Resolution: %s  (, / .)", g_renderPresets[g_renderResIndex].label);
+	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
+	y += lineH;
+
+	snprintf(buf, sizeof(buf), "Music: %s  (O toggle)", g_musicEnabled ? "ON" : "OFF");
+	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
+	y += lineH;
+
+	snprintf(buf, sizeof(buf), "Song Selection: %s  (Left/Right)", g_songLabels[g_songIndex]);
 	if (y > top - lineH && y < p.bottom - 20) draw_text_line(hdc, p.left + 20, y, buf, RGB(220, 220, 220));
 	y += lineH;
 
@@ -358,6 +466,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		SetTimer(hWnd, 1, 16, NULL);
 		g_lastTickMs = GetTickCount64();
 		update_capture();
+		music_play_selected(true);
 		return 0;
 	}
 	case WM_SIZE:
@@ -402,8 +511,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if (!g_inSettings) {
 			update_game(dt);
 		}
+		music_poll_and_advance();
 
 		if ((GetAsyncKeyState('H') & 1) != 0) g_showHudText = !g_showHudText;
+		if ((GetAsyncKeyState('O') & 1) != 0) {
+			g_musicEnabled = !g_musicEnabled;
+			music_play_selected(true);
+		}
 		if (g_inSettings) {
 			if ((GetAsyncKeyState('J') & 1) != 0) g_mouseSensitivity = clampf(g_mouseSensitivity - 0.01f, 0.01f, 1.0f);
 			if ((GetAsyncKeyState('K') & 1) != 0) g_mouseSensitivity = clampf(g_mouseSensitivity + 0.01f, 0.01f, 1.0f);
@@ -415,6 +529,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if ((GetAsyncKeyState(VK_OEM_6) & 1) != 0) g_resIndex = (g_resIndex + 1) % g_presetCount;
 			if ((GetAsyncKeyState(VK_OEM_COMMA) & 1) != 0) g_renderResIndex = (g_renderResIndex - 1 + g_renderPresetCount) % g_renderPresetCount;
 			if ((GetAsyncKeyState(VK_OEM_PERIOD) & 1) != 0) g_renderResIndex = (g_renderResIndex + 1) % g_renderPresetCount;
+			if ((GetAsyncKeyState(VK_LEFT) & 1) != 0) music_select_prev();
+			if ((GetAsyncKeyState(VK_RIGHT) & 1) != 0) music_select_next();
 			if ((GetAsyncKeyState(VK_RETURN) & 1) != 0) apply_resolution();
 			if ((GetAsyncKeyState(VK_UP) & 1) != 0) g_settingsScroll -= 24.0f;
 			if ((GetAsyncKeyState(VK_DOWN) & 1) != 0) g_settingsScroll += 24.0f;
@@ -501,6 +617,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		g_running = false;
 		KillTimer(hWnd, 1);
+		music_stop();
 		ClipCursor(NULL);
 		ShowCursor(TRUE);
 		PostQuitMessage(0);
