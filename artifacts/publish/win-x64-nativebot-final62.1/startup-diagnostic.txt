@@ -1,0 +1,7 @@
+LauncherStartedExe=C:\Users\JeremyBouchey\Documents\Conduct-Dyadra-Modal-main2\artifacts\publish\win-x64-nativebot-final59\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe time=2026-08-06T10:47:13.8724478Z
+LauncherStartedExe=C:\Users\JeremyBouchey\Documents\Conduct-Dyadra-Modal-main2\artifacts\publish\win-x64-nativebot-final59\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe time=2026-08-06T10:48:35.7702201Z
+LauncherStartedExe=C:\Users\JeremyBouchey\Documents\Conduct-Dyadra-Modal-main2\artifacts\publish\win-x64-nativebot-final59\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe time=2026-08-06T11:03:36.0731916Z
+LauncherStartedExe=C:\Users\JeremyBouchey\Documents\Conduct-Dyadra-Modal-main2\artifacts\publish\win-x64-nativebot-final59\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe time=2026-08-06T11:36:01.5706359Z
+LauncherStartedExe=C:\Users\JeremyBouchey\Documents\Conduct-Dyadra-Modal-main2\artifacts\publish\win-x64-nativebot-final59\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe time=2026-08-06T13:23:17.6917667Z
+LauncherStartedExe=C:\Users\JeremyBouchey\Documents\Backup Conduct Dyadra Modal\artifacts\publish\win-x64-nativebot-final59\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe time=2026-08-06T14:16:13.1058205Z
+LauncherStartedExe=C:\Users\JeremyBouchey\source\repos\Conduct Bi Gear\artifacts\publish\win-x64-nativebot-final61.1\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe time=2026-08-06T14:19:33.8547092Z
