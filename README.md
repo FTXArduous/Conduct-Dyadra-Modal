@@ -84,26 +84,6 @@ powershell -ExecutionPolicy Bypass -File .\Tools\build_engine_installer.ps1
 
 `artifacts/installer-output/ConductDyadraModal_EngineInstaller.exe`
 
-## Versioned build workflow (no overwrite)
-
-To create a new build folder every time (60.1, 61.1, 62.1, ...), run:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Tools\publish_versioned_build.ps1
-```
-
-This script:
-- auto-picks the next version folder (`win-x64-nativebot-final60.1`, then `61.1`, etc.),
-- publishes launcher files there,
-- keeps full explorer hierarchy by copying from `artifacts/publish/win-x64-updated` first,
-- copies native engine binaries into `NativeSamples\D3D12_8x8_engine\build\Release`.
-
-To force a specific version manually:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Tools\publish_versioned_build.ps1 -Version "60.1"
-```
-
 ## Notes
 
 - The executable is stored with Git LFS because it is too large for normal GitHub blobs.
@@ -112,4 +92,3 @@ powershell -ExecutionPolicy Bypass -File .\Tools\publish_versioned_build.ps1 -Ve
 - If you already cloned earlier, always run `git pull origin main` before `git lfs pull`.
 - If you download the repo as a ZIP from GitHub, make sure the large file is present after extraction. If it is missing, use `git clone` plus `git lfs pull` instead.
 - The included build is the Windows x64 published EXE.
-- `Tools/clone_and_pull_lfs.ps1` now reports the newest versioned EXE path automatically.

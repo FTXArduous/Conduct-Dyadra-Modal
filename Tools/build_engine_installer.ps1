@@ -1,7 +1,6 @@
 param(
-    [string]$PublishDir = "",
+    [string]$PublishDir = ".\\artifacts\\publish\\win-x64-nativebot-final59",
     [string]$EngineBuildDir = ".\\NativeSamples\\D3D12_8x8_engine\\build\\Release",
-    [string]$FallbackEngineSource = ".\\artifacts\\publish\\win-x64-nativebot-final59\\NativeSamples\\D3D12_8x8_engine\\build\\Release",
     [string]$InstallerScript = ".\\installer\\ConductDyadraModalEngine.iss",
     [string]$OutputDir = ".\\artifacts\\installer-output",
     [switch]$SkipPublish
@@ -29,49 +28,7 @@ function Resolve-IsccPath {
     throw "Inno Setup compiler (ISCC.exe) not found. Install Inno Setup 6 first."
 }
 
-function Resolve-LatestPublishDir {
-    param(
-        [string]$PublishRoot = ".\\artifacts\\publish",
-        [string]$Prefix = "win-x64-nativebot-final"
-    )
-
-    if (-not (Test-Path $PublishRoot)) {
-        return $null
-    }
-
-    $dirs = Get-ChildItem -Path $PublishRoot -Directory -ErrorAction SilentlyContinue | Where-Object {
-        $_.Name -like "$Prefix*"
-    }
-
-    $ranked = foreach ($dir in $dirs) {
-        $suffix = $dir.Name.Substring($Prefix.Length)
-        if ($suffix -match "^(\d+)(?:\.(\d+))?$") {
-            [PSCustomObject]@{
-                Name = $dir.Name
-                Major = [int]$matches[1]
-                Minor = if ($matches[2]) { [int]$matches[2] } else { 0 }
-            }
-        }
-    }
-
-    if (-not $ranked) {
-        return $null
-    }
-
-    return Join-Path $PublishRoot (($ranked | Sort-Object Major, Minor | Select-Object -Last 1).Name)
-}
-
 Set-Location (Resolve-Path ".")
-
-if ([string]::IsNullOrWhiteSpace($PublishDir)) {
-    $resolvedLatest = Resolve-LatestPublishDir
-    if ($resolvedLatest) {
-        $PublishDir = $resolvedLatest
-        Write-Host "Using latest publish folder: $PublishDir"
-    } else {
-        $PublishDir = ".\\artifacts\\publish\\win-x64-nativebot-final59"
-    }
-}
 
 $publishDirAbs = Resolve-Path $PublishDir -ErrorAction SilentlyContinue
 if (-not $publishDirAbs) {
@@ -97,14 +54,6 @@ if (-not (Test-Path $mainExe)) {
 
 $engineExe = Join-Path $engineBuildAbs "D3D12_8x8_engine.exe"
 $launcherExe = Join-Path $engineBuildAbs "D3D12_8x8_launcher.exe"
-if ((-not (Test-Path $engineExe)) -or (-not (Test-Path $launcherExe))) {
-    $fallbackAbs = Resolve-Path $FallbackEngineSource -ErrorAction SilentlyContinue
-    if ($fallbackAbs) {
-        New-Item -ItemType Directory -Force -Path $engineBuildAbs | Out-Null
-        Copy-Item -Path (Join-Path $fallbackAbs.Path "D3D12_8x8_engine.exe") -Destination $engineExe -Force
-        Copy-Item -Path (Join-Path $fallbackAbs.Path "D3D12_8x8_launcher.exe") -Destination $launcherExe -Force
-    }
-}
 if (-not (Test-Path $engineExe)) {
     throw "Engine executable not found: $engineExe"
 }

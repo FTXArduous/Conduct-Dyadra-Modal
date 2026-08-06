@@ -29,17 +29,5 @@
       <Link>NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_launcher.exe</Link>
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </Content>
-    <Content Include="PayloadAudio\Obsidian Bazaar Chillhop.mp3">
-      <Link>NativeSamples\D3D12_8x8_engine\build\Release\Obsidian Bazaar Chillhop.mp3</Link>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </Content>
-    <Content Include="PayloadAudio\Obsidian Bazaar Chillhop (1).mp3">
-      <Link>NativeSamples\D3D12_8x8_engine\build\Release\Obsidian Bazaar Chillhop (1).mp3</Link>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </Content>
-    <Content Include="PayloadAudio\Obsidian Bazaar Chillhop (2).mp3">
-      <Link>NativeSamples\D3D12_8x8_engine\build\Release\Obsidian Bazaar Chillhop (2).mp3</Link>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </Content>
   </ItemGroup>
 </Project>

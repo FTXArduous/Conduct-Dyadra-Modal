@@ -111,10 +111,10 @@ internal static class Program
         var baseDir = AppContext.BaseDirectory;
         var candidates = new[]
         {
-            Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Release", "D3D12_8x8_engine.exe"),
             Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Release", "D3D12_8x8_launcher.exe"),
-            Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Debug", "D3D12_8x8_engine.exe"),
+            Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Release", "D3D12_8x8_engine.exe"),
             Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Debug", "D3D12_8x8_launcher.exe"),
+            Path.Combine(baseDir, "NativeSamples", "D3D12_8x8_engine", "build", "Debug", "D3D12_8x8_engine.exe"),
         };
 
         foreach (var candidate in candidates)
@@ -150,14 +150,14 @@ internal static class Program
         ExtractResource("Payload.D3D12_8x8_engine.exe", engineExePath);
         ExtractResource("Payload.D3D12_8x8_launcher.exe", launcherExePath);
 
-        if (File.Exists(engineExePath))
-        {
-            return engineExePath;
-        }
-
         if (File.Exists(launcherExePath))
         {
             return launcherExePath;
+        }
+
+        if (File.Exists(engineExePath))
+        {
+            return engineExePath;
         }
 
         return null;
