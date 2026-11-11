@@ -11,14 +11,18 @@
     <PublishSingleFile>false</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
-    <Version>59.0.3</Version>
-    <FileVersion>59.0.3.0</FileVersion>
-    <AssemblyVersion>59.0.3.0</AssemblyVersion>
-    <InformationalVersion>final59-redeploy-59.0.3</InformationalVersion>
+    <Version>2.0.0-Pre-Release</Version>
+    <FileVersion>2.0.0.0</FileVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <InformationalVersion>V2.0.00-Pre-Release</InformationalVersion>
     <Company>Conduct Dyadra Modal</Company>
     <Product>Conduct Dyadra Modal</Product>
     <Description>Conduct Dyadra Modal launcher with embedded engine payload.</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\NativeSamples\D3D12_8x8_engine\build\Release\D3D12_8x8_engine.exe">
